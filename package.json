@@ -1,0 +1,20 @@
+{
+  "name": "@aqib/agentic-tool-orchestrator",
+  "version": "1.0.0",
+  "description": "Autonomous LLM agent execution engine with dynamic tool dispatch and schema validation",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage"
+  },
+  "dependencies": {
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "typescript": "^5.3.3",
+    "vitest": "^1.1.0"
+  }
+}
