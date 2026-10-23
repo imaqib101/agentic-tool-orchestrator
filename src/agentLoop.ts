@@ -1,5 +1,5 @@
 import { ToolRegistry } from "./toolRegistry";
-import { runWithTimeout } from "./executor";
+import { runWithTimeout, retryWithBackoff, type RetryOptions } from "./executor";
 
 export interface Message {
   role: "user" | "assistant" | "tool";
@@ -10,6 +10,7 @@ export interface Message {
 export interface AgentOptions {
   maxTurns?: number;
   toolTimeoutMs?: number;
+  toolRetry?: RetryOptions;
 }
 
 export class AgentRuntime {
@@ -34,10 +35,14 @@ export class AgentRuntime {
 
       const { name, args } = response.toolCall;
       try {
-        const result = await runWithTimeout(
-          () => this.registry.invoke(name, args),
-          timeout,
-          name
+        const result = await retryWithBackoff(
+          () =>
+            runWithTimeout(
+              () => this.registry.invoke(name, args),
+              timeout,
+              name
+            ),
+          this.options.toolRetry
         );
         history.push({
           role: "tool",

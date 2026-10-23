@@ -6,7 +6,7 @@
 [![Vitest](https://img.shields.io/badge/Vitest-Tested-729B1B?style=for-the-badge&logo=vitest&logoColor=white)](https://vitest.dev/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](LICENSE)
 
-An extensible, production-grade **Autonomous LLM Agent Runtime** designed in TypeScript. Features strict runtime schema validation via Zod, asynchronous tool execution sandboxing, bounded turn-budget controls, and automated error recovery loops.
+An extensible, production-grade **Autonomous LLM Agent Runtime** designed in TypeScript. Features strict runtime schema validation via Zod, asynchronous tool execution sandboxing, exponential retry backoff, bounded turn-budget controls, and automated error recovery loops.
 
 ---
 
@@ -30,7 +30,7 @@ User Objective
       └────────────┬────────────┘                   │
                    ▼ [Valid]                        │
       ┌─────────────────────────┐                   │
-      │ Bounded Runner & Sandbox│ ───► [Result] ────┘
+      │ Sandbox & Retry Backoff │ ───► [Result] ────┘
       └────────────┬────────────┘
                    ▼
           Final Resolution
@@ -42,8 +42,9 @@ User Objective
 
 - 🛡️ **Runtime Schema Enforcement**: Parameter schemas backed by Zod ensure malformed model arguments fail gracefully with structured feedback.
 - ⏱️ **Execution Sandboxing**: Configurable per-tool timeouts prevent runaway external calls from hanging agent sessions.
+- 🔁 **Exponential Retry Backoff**: Automatic retries with configurable delay curves, jitter limits, and error predicates for resilient tool execution.
 - 🔄 **Autonomous Continuation Loop**: Manages turn budgets, message history, and tool observation state.
-- 🧪 **100% Vitest Coverage**: Tested against mock multi-turn reasoning workflows and edge-case errors.
+- 🧪 **100% Vitest Coverage**: Tested against mock multi-turn reasoning workflows, transient faults, and edge-case errors.
 
 ---
 
@@ -65,8 +66,17 @@ registry.register({
   }
 });
 
-// 2. Initialize Agent with LLM Handler
-const runtime = new AgentRuntime(registry, llmClient, { maxTurns: 10 });
+// 2. Initialize Agent with LLM Handler and Resilient Retry Policy
+const runtime = new AgentRuntime(registry, llmClient, {
+  maxTurns: 10,
+  toolTimeoutMs: 10000,
+  toolRetry: {
+    maxRetries: 3,
+    initialDelayMs: 200,
+    backoffFactor: 2
+  }
+});
+
 const result = await runtime.run("Find deployment specs for production");
 console.log(result.content);
 ```
