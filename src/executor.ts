@@ -1,8 +1,11 @@
+export type JitterStrategy = "none" | "full" | "equal";
+
 export interface RetryOptions {
   maxRetries?: number;
   initialDelayMs?: number;
   backoffFactor?: number;
   maxDelayMs?: number;
+  jitter?: JitterStrategy;
   shouldRetry?: (error: unknown, attempt: number) => boolean;
   onRetry?: (error: unknown, attempt: number, delayMs: number) => void;
 }
@@ -27,6 +30,29 @@ export async function runWithTimeout<T>(
   }
 }
 
+export function calculateBackoff(
+  attempt: number,
+  initialDelayMs: number,
+  backoffFactor: number,
+  maxDelayMs: number,
+  jitter: JitterStrategy = "none"
+): number {
+  const exponential = initialDelayMs * Math.pow(backoffFactor, attempt - 1);
+  const cappedDelay = Math.min(exponential, maxDelayMs);
+
+  switch (jitter) {
+    case "full":
+      return Math.floor(Math.random() * cappedDelay);
+    case "equal": {
+      const half = cappedDelay / 2;
+      return Math.floor(half + Math.random() * half);
+    }
+    case "none":
+    default:
+      return cappedDelay;
+  }
+}
+
 export async function retryWithBackoff<T>(
   fn: () => Promise<T>,
   options: RetryOptions = {}
@@ -39,6 +65,7 @@ export async function retryWithBackoff<T>(
   const initialDelayMs = options.initialDelayMs ?? 100;
   const backoffFactor = options.backoffFactor ?? 2;
   const maxDelayMs = options.maxDelayMs ?? 10000;
+  const jitter = options.jitter ?? "none";
   const shouldRetry = options.shouldRetry ?? (() => true);
 
   let attempt = 0;
@@ -51,8 +78,7 @@ export async function retryWithBackoff<T>(
         throw error;
       }
 
-      const calculatedDelay = initialDelayMs * Math.pow(backoffFactor, attempt - 1);
-      const delayMs = Math.min(calculatedDelay, maxDelayMs);
+      const delayMs = calculateBackoff(attempt, initialDelayMs, backoffFactor, maxDelayMs, jitter);
 
       if (options.onRetry) {
         options.onRetry(error, attempt, delayMs);
