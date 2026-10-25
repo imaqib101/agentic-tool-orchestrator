@@ -1,6 +1,7 @@
 import { z, type ZodSchema } from "zod";
 import { JsonSchemaValidator, type JsonSchema } from "./jsonSchema";
 import { CircuitBreaker, type CircuitBreakerOptions } from "./circuitBreaker";
+import { composeMiddlewares, type ToolMiddleware, type ToolMiddlewareContext } from "./middleware";
 
 export type SchemaDefinition = ZodSchema | JsonSchema;
 
@@ -24,6 +25,12 @@ export interface OpenAIFunctionSpec {
 export class ToolRegistry {
   private tools = new Map<string, ToolDefinition>();
   private circuitBreakers = new Map<string, CircuitBreaker>();
+  private middlewares: ToolMiddleware[] = [];
+
+  use(middleware: ToolMiddleware): this {
+    this.middlewares.push(middleware);
+    return this;
+  }
 
   register<T = any, R = any>(tool: ToolDefinition<T, R>) {
     if (this.tools.has(tool.name)) {
@@ -56,12 +63,30 @@ export class ToolRegistry {
 
     const validatedArgs = this.validateParameters(tool, rawArgs);
 
-    const cb = this.circuitBreakers.get(name);
-    if (cb) {
-      return await cb.execute(() => Promise.resolve(tool.execute(validatedArgs)));
+    const coreExecution = async (ctx: ToolMiddlewareContext) => {
+      const cb = this.circuitBreakers.get(ctx.toolName);
+      if (cb) {
+        return await cb.execute(() => Promise.resolve(tool.execute(ctx.args)));
+      }
+      return await tool.execute(ctx.args);
+    };
+
+    if (this.middlewares.length === 0) {
+      return await coreExecution({
+        toolName: name,
+        args: validatedArgs,
+        metadata: {},
+        startTime: Date.now()
+      });
     }
 
-    return await tool.execute(validatedArgs);
+    const runner = composeMiddlewares(this.middlewares, coreExecution);
+    return await runner({
+      toolName: name,
+      args: validatedArgs,
+      metadata: {},
+      startTime: Date.now()
+    });
   }
 
   private validateParameters(tool: ToolDefinition, rawArgs: unknown): any {
