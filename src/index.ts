@@ -5,3 +5,4 @@ export * from "./circuitBreaker";
 export * from "./jsonSchema";
 export * from "./middleware";
 export * from "./dagPlanner";
+export * from "./telemetry";

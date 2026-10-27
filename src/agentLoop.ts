@@ -1,5 +1,6 @@
 import { ToolRegistry } from "./toolRegistry";
 import { runWithTimeout, retryWithBackoff, type RetryOptions } from "./executor";
+import { TelemetryCollector } from "./telemetry";
 
 export interface ToolCallSpec {
   id?: string;
@@ -29,6 +30,9 @@ export interface AgentOptions {
   maxHistoryMessages?: number;
   systemPrompt?: string;
   hooks?: AgentHooks;
+  /** Optional telemetry collector — when provided, every tool execution is
+   *  recorded and the summary is included in the AgentRunResult. */
+  telemetry?: TelemetryCollector;
 }
 
 export interface AgentRunResult {
@@ -37,6 +41,12 @@ export interface AgentRunResult {
   turns: number;
   totalDurationMs: number;
   toolInvocations: number;
+  /** Telemetry summary — only populated when AgentOptions.telemetry is provided. */
+  telemetrySummary?: {
+    totalExecutions: number;
+    successRate: number;
+    avgDurationMs: number;
+  };
 }
 
 export class AgentRuntime {
@@ -100,7 +110,8 @@ export class AgentRuntime {
           history,
           turns: turn + 1,
           totalDurationMs: Date.now() - startTime,
-          toolInvocations
+          toolInvocations,
+          telemetrySummary: this.options.telemetry?.getSummary(),
         };
       }
 
@@ -128,12 +139,14 @@ export class AgentRuntime {
             if (this.options.hooks?.onToolEnd) {
               await this.options.hooks.onToolEnd(call, res, durationMs);
             }
+            this.options.telemetry?.record({ toolName: call.name, durationMs, success: true });
             return { call, success: true, result: res };
           } catch (err: any) {
             const durationMs = Date.now() - callStart;
             if (this.options.hooks?.onToolEnd) {
               await this.options.hooks.onToolEnd(call, { error: err.message }, durationMs);
             }
+            this.options.telemetry?.record({ toolName: call.name, durationMs, success: false });
             return { call, success: false, error: err.message };
           }
         })
