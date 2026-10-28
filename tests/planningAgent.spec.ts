@@ -1,9 +1,5 @@
-import { describe, it, expect, beforeEach } from "vitest";
-import {
-  PlanningAgent,
-  PlanStep,
-  ValidationResult,
-} from "../src/planningAgent";
+import { describe, it, expect } from "vitest";
+import { PlanningAgent, PlanStep, ValidationResult } from "../src/planningAgent";
 
 // ---------------------------------------------------------------------------
 // Fixtures
@@ -73,15 +69,15 @@ describe("PlanningAgent.validatePlan — cycle detection", () => {
         toolName: "search",
         args: {},
         dependsOn: ["B"],
-        rationale: "Search first",
+        rationale: "Search first"
       },
       {
         id: "B",
         toolName: "fetch",
         args: {},
         dependsOn: ["A"],
-        rationale: "Then fetch",
-      },
+        rationale: "Then fetch"
+      }
     ];
 
     const result: ValidationResult = agent.validatePlan(steps);
@@ -111,15 +107,13 @@ describe("PlanningAgent.validatePlan — unknown tool references", () => {
         toolName: "nonExistentTool",
         args: {},
         dependsOn: [],
-        rationale: "This tool does not exist",
-      },
+        rationale: "This tool does not exist"
+      }
     ];
 
     const result = agent.validatePlan(steps);
     expect(result.valid).toBe(false);
-    expect(
-      result.errors.some((e) => /unknown tool/i.test(e))
-    ).toBe(true);
+    expect(result.errors.some((e) => /unknown tool/i.test(e))).toBe(true);
   });
 
   it("passes when all referenced tools are registered", () => {
@@ -163,8 +157,8 @@ describe("PlanningAgent.toDAG — adjacency list", () => {
 
     // A → B → C (B depends on A, C depends on B)
     const a: PlanStep = { id: "A", toolName: "search", args: {}, dependsOn: [], rationale: "root" };
-    const b: PlanStep = { id: "B", toolName: "fetch",  args: {}, dependsOn: ["A"], rationale: "after A" };
-    const c: PlanStep = { id: "C", toolName: "store",  args: {}, dependsOn: ["B"], rationale: "after B" };
+    const b: PlanStep = { id: "B", toolName: "fetch", args: {}, dependsOn: ["A"], rationale: "after A" };
+    const c: PlanStep = { id: "C", toolName: "store", args: {}, dependsOn: ["B"], rationale: "after B" };
 
     const dag = agent.toDAG([a, b, c]);
 

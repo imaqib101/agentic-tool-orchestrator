@@ -122,5 +122,6 @@ console.log(`Completed in ${result.turns} turns, ${result.totalDurationMs}ms`);
 ## 👤 Author
 
 **Mohammed Aqib**
+
 - GitHub: [@imaqib101](https://github.com/imaqib101)
 - Location: Bengaluru, India

@@ -41,7 +41,9 @@ export interface PlanningAgentOptions {
  * @returns the cycle members if found, otherwise null.
  */
 function detectCycle(graph: Map<string, string[]>): string[] | null {
-  const WHITE = 0, GRAY = 1, BLACK = 2;
+  const WHITE = 0,
+    GRAY = 1,
+    BLACK = 2;
   const color = new Map<string, number>();
 
   for (const node of graph.keys()) {
@@ -93,7 +95,7 @@ export class PlanningAgent {
     this.tools = new Set(tools);
     this.options = {
       maxSteps: options.maxSteps ?? 20,
-      allowDuplicateTools: options.allowDuplicateTools ?? true,
+      allowDuplicateTools: options.allowDuplicateTools ?? true
     };
   }
 
@@ -115,7 +117,7 @@ export class PlanningAgent {
       toolName,
       args: { goal: goal.trim(), stepIndex: index },
       dependsOn: index === 0 ? [] : [`step-${index}`],
-      rationale: `Use ${toolName} to progress toward: "${goal.trim()}" (step ${index + 1}/${capped.length}).`,
+      rationale: `Use ${toolName} to progress toward: "${goal.trim()}" (step ${index + 1}/${capped.length}).`
     }));
   }
 
@@ -157,9 +159,7 @@ export class PlanningAgent {
       // Unknown dependsOn references
       for (const dep of step.dependsOn) {
         if (!stepIds.has(dep)) {
-          errors.push(
-            `Step "${step.id}" depends on unknown step id "${dep}".`
-          );
+          errors.push(`Step "${step.id}" depends on unknown step id "${dep}".`);
         }
       }
     }

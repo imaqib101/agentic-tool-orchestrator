@@ -10,11 +10,7 @@ export interface RetryOptions {
   onRetry?: (error: unknown, attempt: number, delayMs: number) => void;
 }
 
-export async function runWithTimeout<T>(
-  promiseFn: () => Promise<T>,
-  timeoutMs: number,
-  toolName: string
-): Promise<T> {
+export async function runWithTimeout<T>(promiseFn: () => Promise<T>, timeoutMs: number, toolName: string): Promise<T> {
   let timer: NodeJS.Timeout;
 
   const timeoutPromise = new Promise<never>((_, reject) => {
@@ -53,10 +49,7 @@ export function calculateBackoff(
   }
 }
 
-export async function retryWithBackoff<T>(
-  fn: () => Promise<T>,
-  options: RetryOptions = {}
-): Promise<T> {
+export async function retryWithBackoff<T>(fn: () => Promise<T>, options: RetryOptions = {}): Promise<T> {
   const maxRetries = options.maxRetries ?? 0;
   if (maxRetries <= 0) {
     return await fn();
