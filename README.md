@@ -5,6 +5,7 @@
 [![Schema Validation](https://img.shields.io/badge/Schema-Zod%20%7C%20JSON%20Schema-3E67B1?style=for-the-badge&logo=zod&logoColor=white)](https://zod.dev/)
 [![Vitest](https://img.shields.io/badge/Vitest-Tested-729B1B?style=for-the-badge&logo=vitest&logoColor=white)](https://vitest.dev/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](LICENSE)
+[![CI](https://github.com/imaqib101/agentic-tool-orchestrator/actions/workflows/ci.yml/badge.svg)](https://github.com/imaqib101/agentic-tool-orchestrator/actions/workflows/ci.yml)
 
 An extensible, production-grade **Autonomous LLM Agent Runtime** designed in TypeScript. Features strict runtime schema validation (dual Zod & Draft-07 JSON Schema), parallel tool execution, circuit breakers, jittered exponential backoff, bounded turn-budget controls, and observable multi-turn reasoning loops.
 
@@ -56,15 +57,28 @@ User Objective / Multi-turn Prompt
 - 🔌 **Circuit Breaker Resilience**: Integrates stateful circuit breakers (`CLOSED` ➔ `OPEN` ➔ `HALF_OPEN`) to shield downstream third-party APIs from cascading failure.
 - 🔁 **Exponential Backoff with Jitter**: Configurable delay curves with `none`, `full`, and `equal` jitter to eliminate thundering herd problems.
 - 🧭 **Lifecycle Observability**: Hooks for `onStepStart`, `onToolStart`, `onToolEnd`, and `onError` for real-time telemetry and auditing.
-- 🗂️ **OpenAI Tool Export**: Instantly transform registered tools into standard OpenAI / Anthropic function calling specifications via `toOpenAITools()`.
-- 🧪 **100% Vitest Coverage**: Battle-tested against multi-turn workflows, timeout race conditions, and circuit trips.
+- 🗂️ **OpenAI Tool Export**: Export registered tools as OpenAI-style function specs via `toOpenAITools()`. JSON Schema parameters are passed through as-is; Zod schemas are exported as a generic `object` placeholder (Zod-to-JSON-Schema conversion is not built in).
+- 🧪 **Tested with Vitest**: Unit tests cover multi-turn workflows, timeouts, retries, circuit trips, DAG planning and middleware (run `npm run test:coverage` for a report).
+
+---
+
+## 📦 Installation
+
+Requires Node.js 20+. The package is not yet published to npm; install from source:
+
+```bash
+git clone https://github.com/imaqib101/agentic-tool-orchestrator.git
+cd agentic-tool-orchestrator
+npm ci
+npm run build
+```
 
 ---
 
 ## 🚀 Quick Start
 
 ```typescript
-import { ToolRegistry, AgentRuntime, CircuitBreaker } from "@aqib/agentic-tool-orchestrator";
+import { ToolRegistry, AgentRuntime, type Message } from "@aqib/agentic-tool-orchestrator";
 import { z } from "zod";
 
 const registry = new ToolRegistry();
@@ -96,7 +110,14 @@ registry.register({
   }
 });
 
-// 3. Initialize Agent with Multi-turn Hooks and Jittered Retries
+// 3. Provide an LLM caller: (history: Message[]) => Promise<Message>.
+//    An assistant message may include `toolCalls` to request tool execution.
+const llmCaller = async (history: Message[]): Promise<Message> => {
+  /* call your model provider here */
+  return { role: "assistant", content: "done" };
+};
+
+// 4. Initialize Agent with Multi-turn Hooks and Jittered Retries
 const runtime = new AgentRuntime(registry, llmCaller, {
   maxTurns: 10,
   toolTimeoutMs: 8000,
@@ -116,6 +137,39 @@ const result = await runtime.runDetailed("Investigate latency spike in cluster u
 console.log(result.message.content);
 console.log(`Completed in ${result.turns} turns, ${result.totalDurationMs}ms`);
 ```
+
+---
+
+## 🧩 API Overview
+
+All exports come from the package root (`src/index.ts`):
+
+| Export                                                                                               | Purpose                                                                                                                   |
+| ---------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `ToolRegistry`                                                                                       | Register tools, validate arguments (Zod / JSON Schema), attach circuit breakers and middleware, `invoke`, `toOpenAITools` |
+| `AgentRuntime`                                                                                       | Multi-turn loop (`run`, `runDetailed`) with parallel tool calls, timeouts, retries, hooks, optional telemetry             |
+| `CircuitBreaker`, `CircuitBreakerError`                                                              | Stateful `CLOSED` / `OPEN` / `HALF_OPEN` protection                                                                       |
+| `retryWithBackoff`, `runWithTimeout`, `calculateBackoff`                                             | Execution helpers with `none` / `full` / `equal` jitter                                                                   |
+| `JsonSchemaValidator`                                                                                | Draft-07 subset validator with path-based errors                                                                          |
+| `composeMiddlewares`, `createTimingMiddleware`, `createCacheMiddleware`, `createRateLimitMiddleware` | Tool middleware pipeline                                                                                                  |
+| `ToolPlanDAG`                                                                                        | Dependency-aware parallel step execution with cycle detection                                                             |
+| `PlanningAgent`                                                                                      | Plan validation and dependency resolution                                                                                 |
+| `TelemetryCollector`                                                                                 | Per-tool execution metrics                                                                                                |
+
+---
+
+## 🛠️ Development
+
+```bash
+npm run lint           # ESLint
+npm run format:check   # Prettier (use `npm run format` to fix)
+npm run typecheck      # type-check src and tests
+npm run build          # compile to dist/
+npm test               # Vitest
+npm run test:coverage  # Vitest with coverage
+```
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) and [CHANGELOG.md](CHANGELOG.md).
 
 ---
 
