@@ -46,7 +46,8 @@
     "prepublishOnly": "npm run build && npm test",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "typecheck": "tsc -p tsconfig.test.json"
   },
   "dependencies": {
     "zod": "^3.22.4"
