@@ -13,7 +13,7 @@ describe("TelemetryCollector integration with AgentRuntime", () => {
       name: "getQuote",
       description: "Fetches an inspirational quote",
       parameters: z.object({ topic: z.string() }),
-      execute: async () => ({ quote: "Stay hungry, stay foolish." }),
+      execute: async () => ({ quote: "Stay hungry, stay foolish." })
     });
 
     const mockLLM = vi
@@ -21,16 +21,16 @@ describe("TelemetryCollector integration with AgentRuntime", () => {
       .mockResolvedValueOnce({
         role: "assistant",
         content: "Fetching quote...",
-        toolCall: { name: "getQuote", args: { topic: "innovation" } },
+        toolCall: { name: "getQuote", args: { topic: "innovation" } }
       })
       .mockResolvedValueOnce({
         role: "assistant",
-        content: "Here is your quote: Stay hungry, stay foolish.",
+        content: "Here is your quote: Stay hungry, stay foolish."
       });
 
     const runtime = new AgentRuntime(registry, mockLLM, {
       maxTurns: 5,
-      telemetry,
+      telemetry
     });
 
     const result = await runtime.runDetailed("Give me a quote about innovation.");
@@ -52,29 +52,29 @@ describe("TelemetryCollector integration with AgentRuntime", () => {
       parameters: z.object({}),
       execute: async () => {
         throw new Error("Service unavailable");
-      },
+      }
     });
 
     let callCount = 0;
-    const mockLLM = vi.fn().mockImplementation(async (history: Message[]) => {
+    const mockLLM = vi.fn().mockImplementation(async (_history: Message[]) => {
       callCount++;
       if (callCount === 1) {
         return {
           role: "assistant" as const,
           content: "Calling unreliable tool...",
-          toolCall: { name: "unreliableTool", args: {} },
+          toolCall: { name: "unreliableTool", args: {} }
         };
       }
       // After seeing the tool error in history, resolve
       return {
         role: "assistant" as const,
-        content: "The tool failed but I can still help.",
+        content: "The tool failed but I can still help."
       };
     });
 
     const runtime = new AgentRuntime(registry, mockLLM, {
       maxTurns: 5,
-      telemetry,
+      telemetry
     });
 
     const result = await runtime.runDetailed("Call the unreliable tool.");
@@ -92,13 +92,13 @@ describe("TelemetryCollector integration with AgentRuntime", () => {
       name: "toolA",
       description: "Tool A",
       parameters: z.object({}),
-      execute: async () => ({ result: "a" }),
+      execute: async () => ({ result: "a" })
     });
     registry.register({
       name: "toolB",
       description: "Tool B",
       parameters: z.object({}),
-      execute: async () => ({ result: "b" }),
+      execute: async () => ({ result: "b" })
     });
 
     let callCount = 0;
@@ -110,8 +110,8 @@ describe("TelemetryCollector integration with AgentRuntime", () => {
           content: "Running both tools...",
           toolCalls: [
             { id: "c1", name: "toolA", args: {} },
-            { id: "c2", name: "toolB", args: {} },
-          ],
+            { id: "c2", name: "toolB", args: {} }
+          ]
         };
       }
       return { role: "assistant" as const, content: "Done." };
@@ -119,7 +119,7 @@ describe("TelemetryCollector integration with AgentRuntime", () => {
 
     const runtime = new AgentRuntime(registry, mockLLM, {
       maxTurns: 5,
-      telemetry,
+      telemetry
     });
 
     const result = await runtime.runDetailed("Run both tools.");
@@ -133,7 +133,7 @@ describe("TelemetryCollector integration with AgentRuntime", () => {
 
     const mockLLM = vi.fn().mockResolvedValueOnce({
       role: "assistant",
-      content: "Direct answer without any tools.",
+      content: "Direct answer without any tools."
     });
 
     const runtime = new AgentRuntime(registry, mockLLM, { maxTurns: 3 });

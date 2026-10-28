@@ -111,7 +111,7 @@ export class AgentRuntime {
           turns: turn + 1,
           totalDurationMs: Date.now() - startTime,
           toolInvocations,
-          telemetrySummary: this.options.telemetry?.getSummary(),
+          telemetrySummary: this.options.telemetry?.getSummary()
         };
       }
 
@@ -126,12 +126,7 @@ export class AgentRuntime {
 
           try {
             const res = await retryWithBackoff(
-              () =>
-                runWithTimeout(
-                  () => this.registry.invoke(call.name, call.args),
-                  timeout,
-                  call.name
-                ),
+              () => runWithTimeout(() => this.registry.invoke(call.name, call.args), timeout, call.name),
               this.options.toolRetry
             );
 

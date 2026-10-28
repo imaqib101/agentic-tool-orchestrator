@@ -23,7 +23,10 @@ export class CircuitBreaker {
   private readonly recoveryTimeoutMs: number;
   private readonly halfOpenMaxSuccess: number;
 
-  constructor(public readonly name: string, options: CircuitBreakerOptions = {}) {
+  constructor(
+    public readonly name: string,
+    options: CircuitBreakerOptions = {}
+  ) {
     this.failureThreshold = options.failureThreshold ?? 3;
     this.recoveryTimeoutMs = options.recoveryTimeoutMs ?? 5000;
     this.halfOpenMaxSuccess = options.halfOpenMaxSuccess ?? 2;

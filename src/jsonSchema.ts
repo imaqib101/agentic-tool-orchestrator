@@ -22,7 +22,11 @@ export interface ValidationError {
 }
 
 export class JsonSchemaValidator {
-  static validate(schema: JsonSchemaProperty, data: unknown, path = "$"): { valid: boolean; errors: ValidationError[] } {
+  static validate(
+    schema: JsonSchemaProperty,
+    data: unknown,
+    path = "$"
+  ): { valid: boolean; errors: ValidationError[] } {
     const errors: ValidationError[] = [];
 
     if (data === undefined) {

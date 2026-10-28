@@ -10,7 +10,7 @@ describe("CircuitBreaker & Fault Tolerance", () => {
       halfOpenMaxSuccess: 1
     });
 
-    let fail = true;
+    const fail = true;
     const task = async () => {
       if (fail) throw new Error("Connection refused");
       return "sunny";
@@ -59,7 +59,7 @@ describe("CircuitBreaker & Fault Tolerance", () => {
 
   it("works with ToolRegistry declarative options", async () => {
     const registry = new ToolRegistry();
-    let fail = true;
+    const fail = true;
 
     registry.register({
       name: "flakyApi",

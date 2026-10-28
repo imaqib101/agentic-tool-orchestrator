@@ -1,4 +1,4 @@
-import { ToolRegistry } from './toolRegistry';
+import { ToolRegistry } from "./toolRegistry";
 
 export interface ToolPlanStep {
   id: string;
@@ -13,7 +13,7 @@ export interface StepExecutionResult {
   resolvedArgs: Record<string, any>;
   output?: any;
   error?: Error;
-  status: 'success' | 'failed' | 'skipped';
+  status: "success" | "failed" | "skipped";
   durationMs: number;
 }
 
@@ -26,15 +26,18 @@ export interface DAGExecutionResult {
 
 export class DependencyCycleError extends Error {
   constructor(public readonly cyclePath: string[]) {
-    super('Cycle detected in tool execution plan: ' + cyclePath.join(' -> '));
-    this.name = 'DependencyCycleError';
+    super("Cycle detected in tool execution plan: " + cyclePath.join(" -> "));
+    this.name = "DependencyCycleError";
   }
 }
 
 export class DependencyFailedError extends Error {
-  constructor(public readonly stepId: string, public readonly failedDependencyId: string) {
+  constructor(
+    public readonly stepId: string,
+    public readonly failedDependencyId: string
+  ) {
     super('Step "' + stepId + '" skipped because prerequisite step "' + failedDependencyId + '" failed.');
-    this.name = 'DependencyFailedError';
+    this.name = "DependencyFailedError";
   }
 }
 
@@ -61,15 +64,15 @@ export class ToolPlanDAG {
 
   private discoverImplicitDependencies(args: unknown): string[] {
     const deps: string[] = [];
-    if (!args || typeof args !== 'object') return deps;
+    if (!args || typeof args !== "object") return deps;
 
     for (const value of Object.values(args as Record<string, unknown>)) {
-      if (typeof value === 'string') {
+      if (typeof value === "string") {
         const match = value.match(REF_PATTERN);
         if (match) {
           deps.push(match[1]);
         }
-      } else if (typeof value === 'object') {
+      } else if (typeof value === "object") {
         deps.push(...this.discoverImplicitDependencies(value));
       }
     }
@@ -79,13 +82,13 @@ export class ToolPlanDAG {
   private resolveReferences(args: any, results: Map<string, StepExecutionResult>): any {
     if (args === null || args === undefined) return args;
 
-    if (typeof args === 'string') {
+    if (typeof args === "string") {
       const match = args.match(REF_PATTERN);
       if (match) {
         const depStepId = match[1];
         const propPath = match[2];
         const depResult = results.get(depStepId);
-        if (!depResult || depResult.status !== 'success') {
+        if (!depResult || depResult.status !== "success") {
           throw new Error('Referenced output from step "' + depStepId + '" is not available.');
         }
         if (!propPath) {
@@ -100,7 +103,7 @@ export class ToolPlanDAG {
       return args.map((item) => this.resolveReferences(item, results));
     }
 
-    if (typeof args === 'object') {
+    if (typeof args === "object") {
       const resolved: Record<string, any> = {};
       for (const [key, val] of Object.entries(args)) {
         resolved[key] = this.resolveReferences(val, results);
@@ -112,7 +115,7 @@ export class ToolPlanDAG {
   }
 
   private getNestedProperty(obj: any, path: string): any {
-    const parts = path.split('.');
+    const parts = path.split(".");
     let current = obj;
     for (const part of parts) {
       if (current === null || current === undefined) return undefined;
@@ -203,7 +206,7 @@ export class ToolPlanDAG {
 
           const failedDep = allDeps.find((dep) => {
             const res = stepResults.get(dep);
-            return !res || res.status !== 'success';
+            return !res || res.status !== "success";
           });
 
           if (failedDep) {
@@ -213,7 +216,7 @@ export class ToolPlanDAG {
               toolName: step.toolName,
               resolvedArgs: step.args,
               error: new DependencyFailedError(stepId, failedDep),
-              status: 'skipped',
+              status: "skipped",
               durationMs: Date.now() - stepStart
             });
             return;
@@ -227,7 +230,7 @@ export class ToolPlanDAG {
               toolName: step.toolName,
               resolvedArgs,
               output,
-              status: 'success',
+              status: "success",
               durationMs: Date.now() - stepStart
             });
           } catch (err: any) {
@@ -237,7 +240,7 @@ export class ToolPlanDAG {
               toolName: step.toolName,
               resolvedArgs: step.args,
               error: err instanceof Error ? err : new Error(String(err)),
-              status: 'failed',
+              status: "failed",
               durationMs: Date.now() - stepStart
             });
           }

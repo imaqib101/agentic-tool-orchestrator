@@ -40,7 +40,7 @@ describe("JsonSchemaValidator & ToolRegistry JSON Schema", () => {
 
     const result = JsonSchemaValidator.validate(userSchema, payload);
     expect(result.valid).toBe(false);
-    expect(result.errors.some((e) => e.message.includes("Missing required property \"role\""))).toBe(true);
+    expect(result.errors.some((e) => e.message.includes('Missing required property "role"'))).toBe(true);
   });
 
   it("fails on enum violation and bounds violation", () => {
@@ -65,7 +65,7 @@ describe("JsonSchemaValidator & ToolRegistry JSON Schema", () => {
 
     const result = JsonSchemaValidator.validate(userSchema, payload);
     expect(result.valid).toBe(false);
-    expect(result.errors.some((e) => e.message.includes("Additional property \"unwanted\" is not allowed"))).toBe(true);
+    expect(result.errors.some((e) => e.message.includes('Additional property "unwanted" is not allowed'))).toBe(true);
   });
 
   it("integrates seamlessly into ToolRegistry", async () => {
@@ -88,9 +88,7 @@ describe("JsonSchemaValidator & ToolRegistry JSON Schema", () => {
     expect(output).toEqual({ success: true, user: "lead_architect" });
 
     // Should reject invalid payload
-    await expect(
-      registry.invoke("getUser", { id: 1, username: "ab" })
-    ).rejects.toThrow("Schema validation failed");
+    await expect(registry.invoke("getUser", { id: 1, username: "ab" })).rejects.toThrow("Schema validation failed");
   });
 
   it("exports OpenAI-compatible function definitions", () => {

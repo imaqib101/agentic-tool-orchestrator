@@ -1,10 +1,6 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect } from "vitest";
 import { ToolRegistry } from "../src/toolRegistry";
-import {
-  createCacheMiddleware,
-  createTimingMiddleware,
-  createRateLimitMiddleware
-} from "../src/middleware";
+import { createCacheMiddleware, createTimingMiddleware, createRateLimitMiddleware } from "../src/middleware";
 
 describe("Tool Execution Middlewares", () => {
   it("should cache repeated invocations with same parameters", async () => {

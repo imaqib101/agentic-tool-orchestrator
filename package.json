@@ -43,14 +43,22 @@
     "build": "tsc -p tsconfig.json",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
-    "prepublishOnly": "npm run build && npm test"
+    "prepublishOnly": "npm run build && npm test",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "dependencies": {
     "zod": "^3.22.4"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.5",
     "@types/node": "^20.10.0",
+    "eslint": "^9.39.5",
+    "globals": "^17.13.0",
+    "prettier": "^3.9.10",
     "typescript": "^5.3.3",
+    "typescript-eslint": "^8.72.1",
     "vitest": "^1.1.0"
   }
 }

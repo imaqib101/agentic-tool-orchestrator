@@ -6,12 +6,14 @@ All notable changes to this project are documented here. The format is based on
 ## [Unreleased]
 
 ### Added
+
 - Project hygiene: LICENSE, CONTRIBUTING, EditorConfig, `.nvmrc`, lint/format tooling and CI.
 - Unit tests for `ToolRegistry`.
 
 ## [1.0.0]
 
 ### Added
+
 - `ToolRegistry` with Zod and JSON Schema (Draft-07 subset) validation and OpenAI-style tool export.
 - `AgentRuntime` multi-turn loop with parallel tool dispatch, timeouts, retries and hooks.
 - `CircuitBreaker`, retry with exponential backoff and jitter, middleware pipeline

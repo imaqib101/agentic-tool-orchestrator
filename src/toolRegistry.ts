@@ -1,4 +1,4 @@
-import { z, type ZodSchema } from "zod";
+import { type ZodSchema } from "zod";
 import { JsonSchemaValidator, type JsonSchema } from "./jsonSchema";
 import { CircuitBreaker, type CircuitBreakerOptions } from "./circuitBreaker";
 import { composeMiddlewares, type ToolMiddleware, type ToolMiddlewareContext } from "./middleware";

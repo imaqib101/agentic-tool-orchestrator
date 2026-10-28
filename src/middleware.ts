@@ -5,10 +5,7 @@ export interface ToolMiddlewareContext {
   startTime: number;
 }
 
-export type ToolMiddleware = (
-  context: ToolMiddlewareContext,
-  next: () => Promise<any>
-) => Promise<any>;
+export type ToolMiddleware = (context: ToolMiddlewareContext, next: () => Promise<any>) => Promise<any>;
 
 /**
  * Composes an array of middlewares into a single execution function (Koa/Express-style onion model).
@@ -50,9 +47,7 @@ export interface TimingMetric {
 /**
  * Creates timing middleware that measures execution latency and invokes an optional telemetry callback.
  */
-export function createTimingMiddleware(
-  onComplete?: (metric: TimingMetric) => void
-): ToolMiddleware {
+export function createTimingMiddleware(onComplete?: (metric: TimingMetric) => void): ToolMiddleware {
   return async (context, next) => {
     const start = Date.now();
     try {
@@ -93,9 +88,7 @@ export interface CacheMiddlewareInstance extends ToolMiddleware {
 /**
  * Creates an in-memory TTL caching middleware for deterministic/idempotent tool results.
  */
-export function createCacheMiddleware(
-  options: CacheMiddlewareOptions = {}
-): CacheMiddlewareInstance {
+export function createCacheMiddleware(options: CacheMiddlewareOptions = {}): CacheMiddlewareInstance {
   const ttlMs = options.ttlMs ?? 60000;
   const maxEntries = options.maxEntries ?? 100;
   const cache = new Map<string, { value: any; expiresAt: number }>();
@@ -104,10 +97,7 @@ export function createCacheMiddleware(
     return `${toolName}:${JSON.stringify(args ?? {})}`;
   }
 
-  const middleware: any = async (
-    context: ToolMiddlewareContext,
-    next: () => Promise<any>
-  ) => {
+  const middleware: any = async (context: ToolMiddlewareContext, next: () => Promise<any>) => {
     const key = computeKey(context.toolName, context.args);
     const now = Date.now();
     const entry = cache.get(key);

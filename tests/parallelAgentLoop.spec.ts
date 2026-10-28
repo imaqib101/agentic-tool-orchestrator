@@ -29,7 +29,7 @@ describe("Parallel Agent Runtime & Lifecycle Hooks", () => {
     });
 
     let turnsCount = 0;
-    const llm = async (history: Message[]): Promise<Message> => {
+    const llm = async (_history: Message[]): Promise<Message> => {
       turnsCount++;
       if (turnsCount === 1) {
         return {
@@ -88,9 +88,15 @@ describe("Parallel Agent Runtime & Lifecycle Hooks", () => {
 
     const runtime = new AgentRuntime(registry, llm, {
       hooks: {
-        onStepStart: (turn) => { stepsSeen.push(turn); },
-        onToolStart: (call) => { startedTools.push(call.name); },
-        onToolEnd: (call) => { endedTools.push(call.name); }
+        onStepStart: (turn) => {
+          stepsSeen.push(turn);
+        },
+        onToolStart: (call) => {
+          startedTools.push(call.name);
+        },
+        onToolEnd: (call) => {
+          endedTools.push(call.name);
+        }
       }
     });
 

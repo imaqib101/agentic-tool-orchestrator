@@ -9,11 +9,7 @@ describe("runWithTimeout", () => {
 
   it("throws a timeout error when operation exceeds duration", async () => {
     await expect(
-      runWithTimeout(
-        () => new Promise((resolve) => setTimeout(resolve, 200)),
-        50,
-        "slowTool"
-      )
+      runWithTimeout(() => new Promise((resolve) => setTimeout(resolve, 200)), 50, "slowTool")
     ).rejects.toThrow('Tool execution timed out after 50ms for "slowTool"');
   });
 });
