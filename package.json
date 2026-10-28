@@ -2,12 +2,48 @@
   "name": "@aqib/agentic-tool-orchestrator",
   "version": "1.0.0",
   "description": "Autonomous LLM agent execution engine with dynamic tool dispatch and schema validation",
+  "keywords": [
+    "llm",
+    "agent",
+    "tool-calling",
+    "function-calling",
+    "circuit-breaker",
+    "json-schema",
+    "zod",
+    "typescript"
+  ],
+  "license": "MIT",
+  "author": "Mohammed Aqib",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/imaqib101/agentic-tool-orchestrator.git"
+  },
+  "bugs": {
+    "url": "https://github.com/imaqib101/agentic-tool-orchestrator/issues"
+  },
+  "homepage": "https://github.com/imaqib101/agentic-tool-orchestrator#readme",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "test": "vitest run",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "prepublishOnly": "npm run build && npm test"
   },
   "dependencies": {
     "zod": "^3.22.4"
