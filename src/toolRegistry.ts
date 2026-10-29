@@ -51,6 +51,28 @@ export class ToolRegistry {
     return this.tools.get(name);
   }
 
+  has(name: string): boolean {
+    return this.tools.has(name);
+  }
+
+  unregister(name: string): boolean {
+    this.circuitBreakers.delete(name);
+    return this.tools.delete(name);
+  }
+
+  getAll(): ToolDefinition[] {
+    return Array.from(this.tools.values());
+  }
+
+  clear(): void {
+    this.tools.clear();
+    this.circuitBreakers.clear();
+  }
+
+  get count(): number {
+    return this.tools.size;
+  }
+
   getCircuitBreaker(name: string): CircuitBreaker | undefined {
     return this.circuitBreakers.get(name);
   }
