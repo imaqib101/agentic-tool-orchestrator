@@ -7,4 +7,5 @@ export * from "./middleware";
 export * from "./dagPlanner";
 export * from "./telemetry";
 export * from "./planningAgent";
+export * from "./batchExecutor";
 
