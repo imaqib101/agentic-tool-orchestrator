@@ -8,4 +8,5 @@ export * from "./dagPlanner";
 export * from "./telemetry";
 export * from "./planningAgent";
 export * from "./batchExecutor";
+export * from "./adaptiveRetryPolicy";
 
