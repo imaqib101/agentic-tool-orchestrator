@@ -117,6 +117,46 @@ console.log(result.message.content);
 console.log(`Completed in ${result.turns} turns, ${result.totalDurationMs}ms`);
 ```
 
+### Human-in-the-Loop (HITL) Safety & Approval Guard
+
+Safeguard sensitive or destructive agent operations with configurable risk levels, timeout policies, parameter mutation, and audit trails:
+
+```typescript
+import {
+  ToolRegistry,
+  ApprovalGuard,
+  createApprovalMiddleware,
+  ApprovalRequest,
+  ApprovalDecision,
+} from "agentic-tool-orchestrator";
+
+const guard = new ApprovalGuard({
+  timeoutMs: 30000,
+  rules: [
+    { match: /^drop_/, riskLevel: "critical" },
+    { match: "deployService", riskLevel: "high" },
+    {
+      match: (ctx) => ctx.toolName === "transferFunds",
+      requiresApproval: (ctx) => ctx.args.amount > 1000,
+      riskLevel: "critical",
+    },
+  ],
+  onApprovalRequested: (req) => console.log(`[APPROVAL NEEDED] ${req.toolName} (${req.riskLevel})`),
+});
+
+const registry = new ToolRegistry();
+registry.use(
+  createApprovalMiddleware(guard, async (req: ApprovalRequest): Promise<ApprovalDecision> => {
+    // Escalate to human operator or automated compliance gate
+    return {
+      approved: true,
+      approver: "ops-lead@company.com",
+      reason: "Verified deployment manifest",
+    };
+  })
+);
+```
+
 ---
 
 ## 👤 Author

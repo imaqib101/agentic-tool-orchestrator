@@ -9,4 +9,5 @@ export * from "./telemetry";
 export * from "./planningAgent";
 export * from "./batchExecutor";
 export * from "./adaptiveRetryPolicy";
+export * from "./approvalGuard";
 
