@@ -51,40 +51,36 @@ describe("TelemetryCollector integration with AgentRuntime", () => {
       description: "A flaky tool that always errors",
       parameters: z.object({}),
       execute: async () => {
-        throw new Error("Service unavailable");
+        throw new Error("Tool failure");
       },
     });
 
-    let callCount = 0;
-    const mockLLM = vi.fn().mockImplementation(async (history: Message[]) => {
-      callCount++;
-      if (callCount === 1) {
-        return {
-          role: "assistant" as const,
-          content: "Calling unreliable tool...",
-          toolCall: { name: "unreliableTool", args: {} },
-        };
-      }
-      // After seeing the tool error in history, resolve
-      return {
-        role: "assistant" as const,
-        content: "The tool failed but I can still help.",
-      };
-    });
+    const mockLLM = vi
+      .fn()
+      .mockResolvedValueOnce({
+        role: "assistant",
+        content: "Trying tool...",
+        toolCall: { name: "unreliableTool", args: {} },
+      })
+      .mockResolvedValueOnce({
+        role: "assistant",
+        content: "Tool failed, handling gracefully.",
+      });
 
     const runtime = new AgentRuntime(registry, mockLLM, {
       maxTurns: 5,
       telemetry,
     });
 
-    const result = await runtime.runDetailed("Call the unreliable tool.");
+    const result = await runtime.runDetailed("Try unreliable tool.");
 
+    expect(result.toolInvocations).toBe(1);
     expect(result.telemetrySummary).toBeDefined();
     expect(result.telemetrySummary!.totalExecutions).toBe(1);
     expect(result.telemetrySummary!.successRate).toBe(0);
   });
 
-  it("accumulates metrics across multiple tool calls in one run", async () => {
+  it("records multiple tool calls including parallel execution correctly in telemetry", async () => {
     const telemetry = new TelemetryCollector();
     const registry = new ToolRegistry();
 
@@ -148,5 +144,15 @@ describe("TelemetryCollector integration with AgentRuntime", () => {
     expect(summary.totalExecutions).toBe(0);
     expect(summary.successRate).toBe(1);
     expect(summary.avgDurationMs).toBe(0);
+  });
+
+  it("calculates percentile durations correctly", () => {
+    const t = new TelemetryCollector();
+    for (let i = 1; i <= 100; i++) {
+      t.record({ toolName: "testTool", durationMs: i, success: true });
+    }
+    expect(t.getPercentileDuration(50)).toBe(50);
+    expect(t.getPercentileDuration(95)).toBe(95);
+    expect(t.getPercentileDuration(99)).toBe(99);
   });
 });
