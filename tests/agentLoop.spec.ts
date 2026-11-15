@@ -72,4 +72,30 @@ describe("AgentRuntime", () => {
     expect(executeMock).toHaveBeenCalledTimes(2);
     expect(mockLLM).toHaveBeenCalledTimes(2);
   });
+
+  it("should abort execution when AbortSignal is triggered", async () => {
+    const registry = new ToolRegistry();
+    registry.register({
+      name: "slowTool",
+      description: "A slow tool",
+      parameters: z.object({}),
+      execute: async () => new Promise((resolve) => setTimeout(resolve, 50))
+    });
+
+    const controller = new AbortController();
+    const mockLLM = vi.fn().mockImplementation(async () => {
+      controller.abort();
+      return {
+        role: "assistant" as const,
+        content: "Starting slow tool...",
+        toolCall: { name: "slowTool", args: {} }
+      };
+    });
+
+    const runtime = new AgentRuntime(registry, mockLLM, {
+      signal: controller.signal
+    });
+
+    await expect(runtime.run("Run slow task")).rejects.toThrow("Agent execution aborted by signal");
+  });
 });

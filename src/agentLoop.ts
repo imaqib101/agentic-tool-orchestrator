@@ -33,6 +33,8 @@ export interface AgentOptions {
   /** Optional telemetry collector — when provided, every tool execution is
    *  recorded and the summary is included in the AgentRunResult. */
   telemetry?: TelemetryCollector;
+  /** Optional cancellation signal. When aborted, runtime gracefully breaks out. */
+  signal?: AbortSignal;
 }
 
 export interface AgentRunResult {
@@ -75,6 +77,10 @@ export class AgentRuntime {
     history.push({ role: "user", content: initialPrompt });
 
     for (let turn = 0; turn < maxTurns; turn++) {
+      if (this.options.signal?.aborted) {
+        throw new Error("Agent execution aborted by signal");
+      }
+
       if (this.options.hooks?.onStepStart) {
         await this.options.hooks.onStepStart(turn, [...history]);
       }
@@ -113,6 +119,10 @@ export class AgentRuntime {
           toolInvocations,
           telemetrySummary: this.options.telemetry?.getSummary(),
         };
+      }
+
+      if (this.options.signal?.aborted) {
+        throw new Error("Agent execution aborted by signal");
       }
 
       // Execute tool calls in parallel
