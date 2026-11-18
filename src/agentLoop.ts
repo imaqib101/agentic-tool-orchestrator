@@ -35,6 +35,8 @@ export interface AgentOptions {
   telemetry?: TelemetryCollector;
   /** Optional cancellation signal. When aborted, runtime gracefully breaks out. */
   signal?: AbortSignal;
+  /** Optional fallback handler invoked when a tool execution fails. Can provide graceful recovery result. */
+  onToolErrorFallback?: (toolCall: ToolCallSpec, error: Error) => unknown | Promise<unknown>;
 }
 
 export interface AgentRunResult {
@@ -153,10 +155,27 @@ export class AgentRuntime {
             return { call, success: true, result: res };
           } catch (err: any) {
             const durationMs = Date.now() - callStart;
+            this.options.telemetry?.record({ toolName: call.name, durationMs, success: false });
+
+            // If a fallback handler is provided, attempt recovery
+            if (this.options.onToolErrorFallback) {
+              try {
+                const fallbackResult = await this.options.onToolErrorFallback(call, err instanceof Error ? err : new Error(String(err)));
+                if (fallbackResult !== undefined) {
+                  if (this.options.hooks?.onToolEnd) {
+                    await this.options.hooks.onToolEnd(call, fallbackResult, durationMs);
+                  }
+                  return { call, success: true, result: fallbackResult, fallbackApplied: true };
+                }
+              } catch (fallbackErr: any) {
+                // If fallback itself throws, proceed with original or fallback error
+                err = fallbackErr;
+              }
+            }
+
             if (this.options.hooks?.onToolEnd) {
               await this.options.hooks.onToolEnd(call, { error: err.message }, durationMs);
             }
-            this.options.telemetry?.record({ toolName: call.name, durationMs, success: false });
             return { call, success: false, error: err.message };
           }
         })

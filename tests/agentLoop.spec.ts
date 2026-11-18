@@ -98,4 +98,47 @@ describe("AgentRuntime", () => {
 
     await expect(runtime.run("Run slow task")).rejects.toThrow("Agent execution aborted by signal");
   });
+
+  it("should apply onToolErrorFallback when tool throws an unhandled error", async () => {
+    const registry = new ToolRegistry();
+    registry.register({
+      name: "unstableSearch",
+      description: "Search service that may fail",
+      parameters: z.object({ query: z.string() }),
+      execute: async () => {
+        throw new Error("Downstream service unavailable 503");
+      }
+    });
+
+    const fallbackMock = vi.fn().mockImplementation((toolCall, err) => {
+      return { cachedResults: ["Offline documentation result"], fallbackNote: "Served from cache" };
+    });
+
+    const mockLLM = vi
+      .fn()
+      .mockResolvedValueOnce({
+        role: "assistant" as const,
+        content: "Searching...",
+        toolCall: { name: "unstableSearch", args: { query: "vitest config" } }
+      })
+      .mockImplementationOnce(async (history) => {
+        const lastTool = history.find((m: any) => m.role === "tool");
+        const parsed = JSON.parse(lastTool?.content ?? "{}");
+        return {
+          role: "assistant" as const,
+          content: `Recovered: ${parsed.cachedResults[0]}`
+        };
+      });
+
+    const runtime = new AgentRuntime(registry, mockLLM, {
+      maxTurns: 3,
+      onToolErrorFallback: fallbackMock
+    });
+
+    const res = await runtime.run("Search for vitest config");
+    expect(res.content).toBe("Recovered: Offline documentation result");
+    expect(fallbackMock).toHaveBeenCalledTimes(1);
+    expect(fallbackMock.mock.calls[0][0].name).toBe("unstableSearch");
+    expect(fallbackMock.mock.calls[0][1].message).toBe("Downstream service unavailable 503");
+  });
 });
